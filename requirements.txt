@@ -1,14 +1,3 @@
-# Dependencias del proyecto face-recognition-opencv
-# Verificado en macOS (Apple Silicon) con Python 3.14
-#
-# INSTALAR EN DOS PASOS:
-#
-#   source .envproject/bin/activate
-#   pip install -r requirements.txt
-#   pip install --no-deps face_recognition==1.3.0 face_recognition_models==0.3.0
-#
-# El segundo paso va aparte y con --no-deps a proposito: ver nota 2.
-# ---------------------------------------------------------------
 
 opencv-python==5.0.0.93          # cv2: imagenes, video, ventanas, dibujo
 dlib-bin==20.0.1.post1           # motor de dlib, precompilado (nota 1)
@@ -17,24 +6,7 @@ numpy==2.5.4                     # operaciones con los encodings
 pillow==12.3.0                   # requerido por face_recognition
 setuptools<81                    # aporta pkg_resources (nota 3)
 requests==2.34.2                 # solo para search_bing_api.py
-
-# ---------------------------------------------------------------
-# NOTAS
-#
-# 1. dlib-bin en lugar de dlib: PyPI no publica wheels de dlib, solo codigo
-#    fuente, asi que instalarlo implica compilar con cmake (varios minutos).
-#    dlib-bin es el mismo dlib 20.0.1 ya compilado, con wheel cp314 arm64.
-#
-# 2. face_recognition se instala aparte y con --no-deps porque declara
-#    dependencia de `dlib` por nombre. dlib-bin instala el mismo modulo pero
-#    con otro nombre de distribucion, asi que pip no la da por satisfecha e
-#    intenta compilar dlib desde fuente. Sus demas dependencias reales
-#    (numpy, pillow, los modelos) ya quedan cubiertas arriba.
-#
-# 3. setuptools<81: la version 81 elimino pkg_resources, que
-#    face_recognition_models importa. Con setuptools nuevo falla con
-#    "ModuleNotFoundError: No module named 'pkg_resources'".
-#
-# 4. Los scripts usan --detection-method cnn por defecto, muy lento en CPU.
-#    Para pruebas usar -d hog.
-# ---------------------------------------------------------------
+pandas==3.1.1                    # tablas (matriz de confusion en evaluar.py)
+scikit-learn==1.9.1              # metricas: precision, recall, F1 (evaluar.py)
+matplotlib==3.11.2               # graficos de metricas (evaluar.py)
+ipykernel==7.4.0                 # kernel para abrir evaluar.ipynb

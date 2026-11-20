@@ -49,6 +49,7 @@ El segundo comando va aparte y con `--no-deps` por tres razones:
 | `numpy`, `pillow` | operaciones con los encodings e imágenes |
 | `setuptools<81` | aporta `pkg_resources` (eliminado en setuptools 81) |
 | `requests` | solo para `search_bing_api.py` |
+| `pandas`, `scikit-learn`, `matplotlib` | métricas y gráficos de `evaluar.py` |
 
 ### 1.5 Verificar que quedó bien
 
@@ -161,3 +162,36 @@ python encode_faces.py -i dataset -e encodings.pickle -d hog #Con parametros
 | `-i` | carpeta raíz del dataset |
 | `-e` | archivo `.pickle` de salida |
 | `-d` | `hog` (rápido) o `cnn` (más preciso, mucho más lento) |
+
+---
+
+## 4. Evaluar los encodings
+
+### 4.1 Cómo funciona
+
+`evaluar.py` mide qué tan bien se distinguen las personas dentro de un `.pickle` de encodings.
+A cada rostro se le busca el **vecino más cercano entre todos los demás** (nunca contra sí mismo) y
+la etiqueta de ese vecino es la predicción. Las distancias se calculan con
+`face_recognition.face_distance`, la misma función que usa `recognize_faces_image.py`, así que lo
+que se mide es lo que realmente se ejecuta al reconocer.
+
+### 4.2 Correrlo
+
+```bash
+python evaluar.py                          # usa encodings.pickle
+python evaluar.py runs/05_cnn.pickle       # evaluar otro pickle
+```
+
+El único argumento (opcional) es la ruta del `.pickle`. Para comparar `hog` contra `cnn`, genera un
+pickle con cada método (`python encode_faces.py -d cnn -e runs/05_cnn.pickle`) y evalúa los dos.
+
+### 4.3 Qué muestra
+
+| Salida | Significado |
+|---|---|
+| `precision` | de las veces que predijo a una persona, cuántas acertó |
+| `recall` | de los rostros reales de una persona, cuántos reconoció |
+| `f1-score` | promedio armónico de precision y recall |
+| `support` | cantidad de rostros de esa persona en el pickle |
+| `accuracy` | porcentaje total de aciertos |
+| matriz de confusión | filas = persona real, columnas = predicha; fuera de la diagonal están los errores |

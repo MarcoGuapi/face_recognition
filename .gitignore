@@ -1,0 +1,30 @@
+# --- Entornos virtuales (se recrean con requirements.txt) ---
+.envproject/
+.venv/
+venv/
+env/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editores ---
+.vscode/
+.idea/
+
+# --- Fotos personales del dataset (datos privados) ---
+dataset/Karla_Abarca/
+dataset/Marco_Guapi/
+
+# --- Imágenes de prueba, videos de entrada y videos generados ---
+examples/
+videos/
+output/

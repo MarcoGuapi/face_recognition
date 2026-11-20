@@ -1,14 +1,15 @@
-
 # USAGE
 # python recognize_faces_image.py --encodings encodings.pickle --image examples/example_01.png
 
 # import the necessary packages
 import argparse
-from compat_pickle import load_encodings
-import numpy as np
 
 import cv2
 import face_recognition
+import numpy as np
+
+from compat_pickle import load_encodings
+from drawing import draw_face, label_style
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -66,7 +67,7 @@ for encoding in encodings:
     # encodings using facial distances
     distances = face_recognition.face_distance(known_encodings, encoding)
 
-    name = "Unknown"
+    name = "Desconocido"
 
     # check to see if we have found a match
     if len(distances) > 0:
@@ -82,27 +83,23 @@ for encoding in encodings:
         second_distance = scores[ranked[1]] if len(ranked) > 1 else float("inf")
 
         # assign a name only when the distance and identity margin are acceptable
-        if best_distance <= THRESHOLD and (second_distance - best_distance) >= MIN_MARGIN:
+        if (
+            best_distance <= THRESHOLD
+            and (second_distance - best_distance) >= MIN_MARGIN
+        ):
             name = closest
 
     # update the list of names
     names.append(name)
 
+# box thickness and label size scale with the image resolution
+font_scale, thickness = label_style(image)
+
 # loop over the recognized faces
-for (top, right, bottom, left), name in zip(boxes, names):
+for box, name in zip(boxes, names):
     # draw the predicted face name on the image
-    color = (0, 0, 255) if name == "Unknown" else (0, 255, 0)
-    cv2.rectangle(image, (left, top), (right, bottom), color, 2)
-    y = top - 15 if top - 15 > 15 else top + 15
-    cv2.putText(
-        image,
-        name,
-        (left, y),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.75,
-        color,
-        2
-    )
+    color = (0, 0, 255) if name == "Desconocido" else (0, 255, 0)
+    draw_face(image, box, name, color, font_scale, thickness)
 
 
 # show the output image

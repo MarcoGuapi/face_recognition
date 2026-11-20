@@ -8,6 +8,7 @@ import face_recognition
 import argparse
 import imutils
 from compat_pickle import load_encodings
+from drawing import draw_face, label_style
 import time
 import cv2
 import numpy as np
@@ -128,7 +129,7 @@ while True:
         best = scores[closest]
         second = scores[ranked[1]] if len(ranked) > 1 else float("inf")
         margin = second - best
-        name = "Unknown"
+        name = "Desconocido"
 
         # assign a known name only when distance and identity margin are acceptable
         if best <= THRESHOLD and margin >= MIN_MARGIN:
@@ -138,7 +139,7 @@ while True:
         previous = tracks.get(track_id) if track_id is not None else None
 
         # [ADDED] Briefly continue a recently confirmed identity, if unambiguous.
-        if name == "Unknown" and previous is not None:
+        if name == "Desconocido" and previous is not None:
             prev_name = previous["last_known"]
             if (prev_name is not None
                 and frame_num - previous["last_confirmed"] <= int(MAX_HOLD_SECONDS * fps)
@@ -171,6 +172,9 @@ while True:
 
     tracks = {k: v for k, v in tracks.items() if frame_num - v["frame"] <= max_gap}
 
+    # box thickness and label size scale with the frame resolution
+    font_scale, thickness = label_style(frame)
+
     # loop over the recognized faces
     for ((top, right, bottom, left), name) in zip(boxes, names):
         # rescale the face coordinates
@@ -180,12 +184,9 @@ while True:
         left = int(left * r)
 
         # draw the predicted face name on the image
-        color = (0, 0, 255) if name == "Unknown" else (0, 255, 0)
-        cv2.rectangle(frame, (left, top), (right, bottom),
-            color, 2)
-        y = top - 15 if top - 15 > 15 else top + 15
-        cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-            0.75, color, 2)
+        color = (0, 0, 255) if name == "Desconocido" else (0, 255, 0)
+        draw_face(frame, (top, right, bottom, left), name, color,
+            font_scale, thickness)
 
     # if the video writer is None *AND* we are supposed to write
     # the output video to disk initialize the writer

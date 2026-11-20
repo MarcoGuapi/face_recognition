@@ -9,6 +9,7 @@ import face_recognition
 import argparse
 import imutils
 from compat_pickle import load_encodings
+from drawing import draw_face, label_style
 import time
 import cv2
 import numpy as np
@@ -71,7 +72,7 @@ while True:
         # attempt to match each face in the input image to our known
         # encodings
         distances = face_recognition.face_distance(known_encodings, encoding)
-        name = "Unknown"
+        name = "Desconocido"
 
         # check to see if we have found a match
         if len(distances) > 0:
@@ -93,6 +94,9 @@ while True:
         # update the list of names
         names.append(name)
 
+    # box thickness and label size scale with the frame resolution
+    font_scale, thickness = label_style(frame)
+
     # loop over the recognized faces
     for ((top, right, bottom, left), name) in zip(boxes, names):
         # rescale the face coordinates
@@ -102,12 +106,9 @@ while True:
         left = int(left * r)
 
         # draw the predicted face name on the image
-        color = (0, 0, 255) if name == "Unknown" else (0, 255, 0)
-        cv2.rectangle(frame, (left, top), (right, bottom),
-            color, 2)
-        y = top - 15 if top - 15 > 15 else top + 15
-        cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-            0.75, color, 2)
+        color = (0, 0, 255) if name == "Desconocido" else (0, 255, 0)
+        draw_face(frame, (top, right, bottom, left), name, color,
+            font_scale, thickness)
 
     # if the video writer is None *AND* we are supposed to write
     # the output video to disk initialize the writer

@@ -1,9 +1,12 @@
-# Guía de uso — face-recognition-opencv
+# Reconocimiento facial con OpenCV y Deep Learning
 
-Reconocimiento facial con `face_recognition` (dlib) + OpenCV sobre imágenes, video y webcam.
-Verificado en macOS (Apple Silicon) con Python 3.14
-## Tutorial oficial del código
-[Pyimage Search - Face Recongnition](https://pyimagesearch.com/2018/06/18/face-recognition-with-opencv-python-and-deep-learning/)
+Guía de instalación, ejecución y evaluación del proyecto `face_recognition`.
+
+Reconocimiento facial con `face_recognition` (dlib) y OpenCV sobre imágenes, videos grabados y cámara web. Permite identificar personas registradas y mostrar la etiqueta `Desconocido` cuando un rostro detectado no cumple los criterios de aceptación.
+
+Configuraciones documentadas: macOS (Apple Silicon, Python 3.14) y Windows (Python 3.12, JupyterLab).
+## Tutorial de referencia
+[PyImageSearch — Face Recognition](https://pyimagesearch.com/2018/06/18/face-recognition-with-opencv-python-and-deep-learning/)
 ---
 
 ## 1. Instalación de librerías
@@ -16,7 +19,7 @@ source .envproject/bin/activate
 ```
 
 Si no existe el entorno, se crea con `python3 -m venv .envproject`.
-0 con `virtualenv .envproject`
+O también con `virtualenv .envproject`.
 ### 1.2 Instalar las dependencias
 
 ```bash
@@ -24,7 +27,7 @@ pip install -r requirements.txt
 pip install --no-deps face_recognition==1.3.0 face_recognition_models==0.3.0
 ```
 
-### 1.3 Por qué son dos instalaciones(Solo explicación no requiere realizar tareas)
+### 1.3 Por qué son dos instalaciones (explicación; no requiere ejecutar comandos)
 
 El segundo comando va aparte y con `--no-deps` por tres razones:
 
@@ -61,10 +64,10 @@ python -c "import cv2, dlib, face_recognition, imutils; print('OK')"
 
 ## 2. Las tres maneras de correrlo
 
-Todas parten del entorno activado y usan el archivo `encodings.pickle` que ya viene en el proyecto o generado con `encode.faces.py`.
+Todas parten del entorno activado y usan el archivo `encodings.pickle` que ya viene en el proyecto o generado con `encode_faces.py`.
 
 Los cuatro scripts tienen **valores por defecto**, así que se pueden correr sin ningún argumento.
-Cada parámetro funcionando igual si lo pasas explícitamente, el default solo aplica cuando lo omites.
+Los valores predeterminados se aplican cuando no se indican argumentos explícitos.
 
 | Script | `-e` | `-i` | `-d` |
 |---|---|---|---|
@@ -73,10 +76,9 @@ Cada parámetro funcionando igual si lo pasas explícitamente, el default solo a
 | `recognize_faces_video.py` | `encodings.pickle` |  (webcam - default) | `hog` |
 | `encode_faces.py` | `encodings.pickle` (salida de vectores 128) | `dataset` | `hog` |
 
-> **Sobre `-d`:** el default original del proyecto era `cnn`, que es más preciso pero sin GPU
-> resulta muy lento el procesamientp. Se cambió a `hog` se puede utilizar `cnn` si la pc tiene `GPU`,
-> que corre en menos de un segundo por imagen. Usa `-d cnn` solo para comparar precisión en una
-> imagen suelta.
+> **Sobre `-d`:** el proyecto utiliza `hog` por defecto para reducir el costo computacional.
+> El detector `cnn` puede utilizarse como alternativa, pero suele resultar más exigente sin aceleración GPU;
+> su velocidad depende del hardware, del tamaño de la imagen y de la configuración.
 
 ### 2.1 Sobre una imagen
 
@@ -118,7 +120,7 @@ python recognize_faces_video_file.py \
 
 ```bash
 python recognize_faces_video.py                              # solo mostrar
-python recognize_faces_video.py -o output/webcam.avi         # ademas grabar
+python recognize_faces_video.py -o output/webcam.avi         # además grabar
 ```
 ---
 
@@ -137,6 +139,8 @@ dataset/
 ├── ellie_sattler/
 ├── ian_malcolm/
 ├── john_hammond/
+├── Karla_Abarca/
+├── Marco_Guapi/
 └── owen_grady/
 ```
 
@@ -168,7 +172,7 @@ python encode_faces.py -i dataset -e encodings.pickle -d hog #Con parametros
 ## 4. Evaluar los encodings
 
 La evaluación está en el notebook `evaluar.ipynb`. Genera los embeddings directamente desde `dataset/`
-(no lee   `encodings.pickle` para no modificar el embeding entrenado y documentado) y calcula métricas, matrices de confusión y gráficos.
+(no lee `encodings.pickle` para calcular las métricas de esa evaluación) y calcula métricas, matrices de confusión y gráficos.
 
 ### 4.1 Qué hace el notebook
 
@@ -251,16 +255,16 @@ El código original no fue modificado. Se actualizaron las imágenes del directo
 
 - **Compatibilidad con NumPy:** se incorporó una clase basada en `pickle.Unpickler` para adaptar las referencias internas de NumPy al cargar codificaciones generadas con otra versión de la biblioteca.
 - **Comparación facial:** se calcularon las distancias entre el rostro detectado y las codificaciones almacenadas. Después, se agruparon las distancias por persona, se seleccionaron las tres menores de cada grupo y se calculó su promedio. La identidad con el promedio más bajo se consideró la mejor candidata.
-- **Validación de identidad:** se asignó el nombre únicamente cuando el promedio fue menor o igual a `0.48` y la diferencia respecto al segundo mejor candidato fue de al menos `0.055`. En caso contrario, se utilizó `Unknown`.
+- **Validación de identidad:** se asignó el nombre únicamente cuando el promedio fue menor o igual a `0.48` y la diferencia respecto al segundo mejor candidato fue de al menos `0.055`. En caso contrario, se utilizó la etiqueta `Desconocido`.
 - **Conversión de colores:** se conservó la transformación original de BGR a RGB mediante `cv2.cvtColor()`.
-- **Visualización:** se cambió la ventana a `WINDOW_NORMAL` y se ajustó su tamaño para visualizar fotografías grandes. También se diferenciaron los rostros reconocidos y `Unknown` mediante recuadros verdes y rojos.
+- **Visualización:** se cambió la ventana a `WINDOW_NORMAL` y se ajustó su tamaño para visualizar fotografías grandes. También se diferenciaron los rostros reconocidos y `Desconocido` mediante recuadros verdes y rojos.
 
 ### 5.3 `recognize_faces_video.py`
 
 - **Compatibilidad con NumPy:** se incorporó la misma adaptación de carga de `encodings.pickle` utilizada en el programa de imágenes.
 - **Cambio en la clasificación:** se reemplazó la votación basada en la cantidad de coincidencias por una comparación de distancias. Para cada persona se tomaron sus tres codificaciones más cercanas al rostro analizado y se calculó el promedio de las distancias. Se seleccionó la identidad con el menor promedio, siempre que cumpliera el umbral `0.48` y el margen `0.055`.
 - **Procesamiento de fotogramas:** se mantuvo el redimensionamiento a 750 píxeles de ancho y la conversión posterior de BGR a RGB.
-- **Visualización:** se conservaron la captura mediante `VideoStream` y las opciones de salida. Se añadieron colores diferentes para los recuadros de identidades reconocidas y `Unknown`.
+- **Visualización:** se conservaron la captura mediante `VideoStream` y las opciones de salida. Se añadieron colores diferentes para los recuadros de identidades reconocidas y `Desconocido`.
 
 ### 5.4 `recognize_faces_video_file.py`
 
@@ -300,3 +304,53 @@ El código original no fue modificado. Se actualizaron las imágenes del directo
 ```
 
 Para procesar otros videos, únicamente se cambian las rutas de entrada (`--input`) y salida (`--output`).
+
+---
+
+## 6. Evaluación adicional de personas no registradas
+
+Esta prueba complementa la evaluación de las ocho identidades registradas descrita en `evaluar.ipynb`. Su finalidad es comprobar cómo se clasifican rostros de personas **no incluidas** en la galería `encodings.pickle`.
+
+### 6.1 Archivos de la prueba
+
+| Ruta | Contenido |
+|---|---|
+| `Unknown/` | Diez fotografías utilizadas como conjunto independiente de prueba; **no deben incorporarse a `dataset/`** para esta evaluación. |
+| `evaluacion_desconocidos.ipynb` | Notebook de JupyterLab que procesa las fotografías, presenta las predicciones y calcula el resumen. |
+| `evaluacion_desconocidos.csv` | Resultados por rostro detectado, con fotografía, predicción, distancia y margen. |
+
+> La carpeta se denomina `Unknown` como nombre de directorio, pero la etiqueta mostrada por el clasificador es **`Desconocido`**.
+
+### 6.2 Procedimiento para reproducir la evaluación
+
+1. Abrir JupyterLab desde la **raíz del repositorio** con el entorno Python configurado.
+2. Comprobar que estén disponibles `Unknown/` y `encodings.pickle`.
+3. Abrir `evaluacion_desconocidos.ipynb` y ejecutar **Run → Run All Cells**.
+4. Revisar las predicciones y el resumen; el notebook guarda el archivo `evaluacion_desconocidos.csv`.
+
+Se conservaron los mismos criterios de clasificación que utiliza el sistema principal:
+
+| Parámetro | Valor |
+|---|---:|
+| Detector de rostros | `hog` |
+| `THRESHOLD` | `0.48` |
+| `NEAREST` | `3` |
+| `MIN_MARGIN` | `0.055` |
+
+### 6.3 Resultados de las pruebas realizadas
+
+| Indicador | Resultado |
+|---|---:|
+| Fotografías procesadas | 10 |
+| Rostros detectados | 27 |
+| Clasificados como `Desconocido` | 27 |
+| Asignaciones a identidades registradas | 0 |
+| Tasa de rechazo correcto entre los rostros detectados | 100 % |
+
+La tasa se calculó como `27 / 27 × 100 = 100 %`, considerando que los rostros evaluados pertenecen a personas no registradas. Este porcentaje **solo describe las detecciones de este conjunto de prueba**: no garantiza el mismo resultado con otras personas, imágenes o condiciones. El CSV tampoco mide por sí solo los rostros visibles que el detector pudiera omitir.
+
+Esta evaluación se realizó **sin modificar ni regenerar `encodings.pickle`**. Los resultados se documentan en el apartado 4.5 del informe académico.
+
+### 6.4 Privacidad y publicación de imágenes
+
+Las fotografías de prueba contienen rostros de personas. Antes de publicarlas en un repositorio público, se debe comprobar que se cuenta con autorización para su difusión. Si no existe autorización, mantener las imágenes fuera del repositorio público y publicar únicamente resultados anonimizados y las instrucciones de reproducción con datos autorizados.
